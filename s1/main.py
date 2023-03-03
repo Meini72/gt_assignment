@@ -43,7 +43,7 @@ def sourceProcessing(file):
 		date_str = '2022-01-01'
 		date_obj = datetime.strptime(date_str, '%Y-%m-%d')
 		data['age'] = (date_obj - pd.to_datetime(data['birthdate'], format='%Y-%m-%d')).astype('<m8[Y]')
-		data['above_18'] = data['age'] > 18
+		data['above_18'] = data['age'].apply(lambda x: 1 if x > 18 else 0)
 
 		data['name'] = data['name'].apply(clean_title)
 
@@ -63,6 +63,7 @@ def sourceProcessing(file):
 		successful_df['membership_id'] = successful_df.apply(lambda x: '{}_{}'.format(x['last_name'] if x['last_name']!='' else 'UNKNOWN', hashlib.sha256(str(x['birthdate']).encode()).hexdigest()[:5]), axis=1)
 
 		del successful_df['age']
+		del successful_df['date_of_birth']
 		del unsuccessful_df['age']
 
 		successful_df.to_csv(f'processedData/successful/{filename}.csv', index=False)
