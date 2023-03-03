@@ -3,15 +3,16 @@ from logging.handlers import TimedRotatingFileHandler
 import pandas as pd
 import glob
 import time
-import pandas as pd
 from dateutil.parser import parse
 from datetime import datetime, timedelta
 import hashlib
 import re
 import multiprocessing
+import os
+import shutil
 
 
-logHandler = TimedRotatingFileHandler("./log/logfile.log",when="midnight")
+logHandler = TimedRotatingFileHandler("./log/logfile.log",when="midnight")  # rotating daily logs
 logFormatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 logHandler.setFormatter( logFormatter )
 logger = logging.getLogger( 'MyLogger' )
@@ -19,22 +20,21 @@ logger.addHandler( logHandler )
 logger.setLevel( logging.INFO )
 
 def find_all_uppercase_words(name):
-    # 使用findall方法和正则表达式来找到所有纯大写的单词
-    #return re.findall(r"(Mr\.|Dr\.|Miss\.|Dr\.|Dr\.|)\s+", name)
     if len(name.split(' '))>2:
     	return (name)
     else:
     	return (None)
 
 def clean_title(name):
-    title_re = r"Mr\.|Miss|III|MD|Jr\.|PhD|DDS|Mrs\.|Dr\.|DVM|Ms\.|II"
+    title_re = r"Mr\.|Miss|III|MD|Jr\.|PhD|DDS|Mrs\.|Dr\.|DVM|Ms\.|II" # clean titles before/after names
     return (re.sub(title_re, '', name).strip())
 
 
-def sourceProcessing():
+def sourceProcessing(file):
 
-	for file in glob.glob('sourceData/*.csv'):
 		filename = file.split('/')[-1].split('.')[0]
+		logger.info(f"Start to process the file {filename}.")
+
 		data = pd.read_csv(file)
 
 		data['birthdate'] = data['date_of_birth'].apply(lambda x: parse(x).strftime('%Y%m%d'))
@@ -66,9 +66,16 @@ def sourceProcessing():
 		del unsuccessful_df['age']
 
 		successful_df.to_csv(f'processedData/successful/{filename}.csv', index=False)
-		unsuccessful_df.to_csv(f'processedData/unsuccessful/{filename}.csv', index=False)
+		logger.info(f"Generate the file for successful applications at processedData/successful/{filename}.csv.")
 
-	return(1)
+		unsuccessful_df.to_csv(f'processedData/unsuccessful/{filename}.csv', index=False)
+		logger.info(f"Generate the file for unsuccessful applications at processedData/successful/{filename}.csv.")
+
+		if not os.path.exists('sourceData/completed/'):
+			os.makedirs('sourceData/completed/')
+		shutil.move(file, f'sourceData/completed/{filename}.csv')
+
+		return(1)
 
 if __name__ == "__main__":
 
@@ -76,10 +83,14 @@ if __name__ == "__main__":
 
 	logger.info(f"Start the processing at {time.strftime('%Y-%m-%d %H:%M:%S',time.gmtime(time.time()))}.")
 
-	for file in glob.glob('sourceData/*.csv'):
-		print(file)
+	files =  glob.glob('sourceData/*.csv') # get all the files for processing for this batch
 
-	sourceProcessing()
+	pool = multiprocessing.Pool(2) # processing in parallel in case there are large volume of data
+
+	pool.map(sourceProcessing, files)
+
+	pool.close()
+	pool.join()
 
 	t2 = time.time()
 
