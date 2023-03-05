@@ -11,7 +11,8 @@ import multiprocessing
 import os
 import shutil
 
-
+if not os.path.exists('./log/'):
+	os.makedirs('./log/')
 logHandler = TimedRotatingFileHandler("./log/logfile.log",when="midnight")  # rotating daily logs
 logFormatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 logHandler.setFormatter( logFormatter )
