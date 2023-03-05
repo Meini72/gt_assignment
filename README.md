@@ -1,4 +1,4 @@
-# Senior Data Enginer Tech Challenge
+# GT Tech Challenge
 
 #### Section 1
 1. The source data is read from the folder *sourceData/* every hour. After processing is done, the source files will be put into the folder *sourceData/completed/*. 
