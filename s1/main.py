@@ -78,7 +78,7 @@ def sourceProcessing(file):
 
 		return(1)
 
-if __name__ == "__main__":
+def main():
 
 	t1 = time.time()
 
@@ -96,6 +96,10 @@ if __name__ == "__main__":
 	t2 = time.time()
 
 	logger.info(f"It takes {t2-t1} seconds to complete the processing.")
+
+if __name__ == "__main__":
+
+	main()
 	
 
 
